@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moody Space — Catatan Pembelian</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --green: #11754d;
+    --green-dark: #0b4a32;
+    --green-darker: #0a3826;
+    --cream: #f9f9cf;
+    --cream-soft: #fffef4;
+    --white: #ffffff;
+    --ink: #123625;
+    --muted: #4f6b58;
+    --line: #cfe3d4;
+    --rust: #c1503f;
+    --rust-dark: #8f382c;
+    --shadow-off: 4px;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--cream-soft);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(17,117,77,0.09) 1px, transparent 0);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+    padding: 28px 16px 80px;
+  }
+  .wrap{ max-width: 900px; margin: 0 auto; }
+
+  header{ margin-bottom: 26px; display:flex; align-items:center; gap: 18px; }
+  header img.logo{ width: 74px; height:auto; image-rendering: pixelated; flex-shrink:0; }
+  header .htext{ min-width:0; }
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  h1{
+    font-family: 'Silkscreen', monospace;
+    font-weight: 700;
+    font-size: 26px;
+    margin: 0 0 8px;
+    color: var(--green-dark);
+    line-height: 1.3;
+  }
+  .sub{ color: var(--muted); font-size: 14px; max-width: 60ch; line-height: 1.5; }
+
+  nav.tabs{
+    display:flex; gap: 8px; margin: 24px 0 20px; flex-wrap: wrap;
+  }
+  nav.tabs button{
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 700;
+    padding: 10px 16px; border-radius: 8px;
+    border: 2.5px solid var(--green-dark);
+    background: var(--white); color: var(--green-dark); cursor: pointer;
+    box-shadow: var(--shadow-off) var(--shadow-off) 0 var(--green-dark);
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  nav.tabs button:hover{ transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--green-dark); }
+  nav.tabs button.active{ background: var(--green); color: var(--cream); }
+  nav.tabs button.active:hover{ transform:none; box-shadow: var(--shadow-off) var(--shadow-off) 0 var(--green-dark); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fade .2s ease; }
+  @keyframes fade{ from{ opacity:0; transform: translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background: var(--white);
+    border: 2.5px solid var(--green-dark);
+    border-radius: 12px;
+    box-shadow: 6px 6px 0 var(--green);
+    padding: 22px;
+    margin-bottom: 22px;
+  }
+  .card h2{
+    font-family: 'Silkscreen', monospace; font-weight: 700; font-size: 16px;
+    margin: 0 0 4px; color: var(--green-dark);
+  }
+  .card .hint{ color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+
+  .grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .field{ display:flex; flex-direction: column; gap: 6px; }
+  .field.full{ grid-column: 1 / -1; }
+  label{ font-size: 12.5px; color: var(--green-dark); font-weight: 700; }
+  input, select, textarea{
+    background: var(--cream-soft);
+    border: 2px solid var(--line);
+    color: var(--ink);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus{ border-color: var(--green); }
+  input::placeholder{ color: #8fa596; }
+
+  .row-3{ display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
+
+  .total-preview{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; color: var(--green-dark); font-weight:600;
+    margin-top: 2px;
+  }
+
+  button.primary{
+    margin-top: 18px;
+    background: var(--green); color:var(--cream); border: 2.5px solid var(--green-dark);
+    font-weight: 700; font-size: 14px;
+    padding: 12px 22px; border-radius: 9px; cursor:pointer;
+    font-family: 'Inter', sans-serif;
+    box-shadow: var(--shadow-off) var(--shadow-off) 0 var(--green-dark);
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  button.primary:hover{ transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--green-dark); }
+  button.primary:active{ transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--green-dark); }
+
+  button.secondary{
+    background: var(--cream); color: var(--green-dark); border: 2px solid var(--green-dark);
+    font-weight:700; font-size:13px; padding: 10px 16px; border-radius:8px; cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  button.secondary:hover{ background: var(--green); color: var(--cream); }
+
+  .stat-row{ display:grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
+  .stat{
+    background: var(--green); border: 2.5px solid var(--green-dark); border-radius: 12px;
+    box-shadow: 5px 5px 0 var(--green-dark);
+    padding: 16px 18px; color: var(--cream);
+  }
+  .stat .label{ font-size: 11px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; font-weight:700; opacity:.85; }
+  .stat .value{ font-family: 'IBM Plex Mono', monospace; font-size: 21px; }
+
+  .filter-bar{ display:flex; align-items:flex-end; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-bar .filters{ display:flex; gap: 14px; flex-wrap: wrap; }
+  .filter-bar .field{ min-width: 160px; }
+  .toolbar-actions{ display:flex; gap:10px; }
+
+  table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th{
+    text-align:left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--green-dark); border-bottom: 2px solid var(--line); padding: 8px 10px; font-weight:700;
+  }
+  tbody td{ padding: 10px 10px; border-bottom: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+  tbody td.name-col{ font-family: 'Inter', sans-serif; font-weight: 600; }
+  tbody tr:hover{ background: #f4faf6; }
+  .chip{
+    display:inline-block; font-family:'Inter', sans-serif; font-size: 11px; font-weight:700;
+    background: var(--cream); color: var(--green-dark); padding: 3px 9px; border-radius: 999px;
+    border: 1.5px solid var(--green);
+  }
+  .del-btn{
+    background: var(--white); border: 2px solid var(--rust); color: var(--rust-dark);
+    border-radius: 7px; padding: 5px 10px; cursor:pointer; font-size: 11.5px; font-weight:700;
+    font-family: 'Inter', sans-serif;
+  }
+  .del-btn:hover{ background: var(--rust); color: var(--white); }
+  .empty{ text-align:center; color: var(--muted); padding: 40px 10px; font-size: 14px; }
+
+  /* Ledger / receipt styling */
+  .ledger{
+    background: var(--cream-soft);
+    border: 2.5px dashed var(--green);
+    border-radius: 12px;
+    padding: 24px 26px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ledger-head{
+    text-align:center; padding-bottom: 16px; margin-bottom: 16px;
+    border-bottom: 2px dashed var(--line);
+  }
+  .ledger-head .month{ font-family:'Silkscreen', monospace; font-size: 18px; color: var(--green-dark); }
+  .ledger-head .cap{ font-size: 10.5px; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; margin-top: 6px; }
+  .ledger-row{
+    display:flex; justify-content: space-between; align-items:center;
+    padding: 10px 0; border-bottom: 1px dashed var(--line); gap: 12px;
+  }
+  .ledger-row:last-child{ border-bottom: none; }
+  .ledger-row .li-name{ font-family:'Inter', sans-serif; font-weight:700; font-size: 13.5px; color: var(--ink); }
+  .ledger-row .li-meta{ color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .ledger-row .li-right{ text-align:right; white-space: nowrap; font-weight:700; color: var(--green-dark); }
+  .bar-track{ height: 6px; background: var(--line); border-radius:3px; margin-top:6px; overflow:hidden; }
+  .bar-fill{ height:100%; background: var(--green); }
+  .ledger-total{
+    display:flex; justify-content: space-between; padding-top: 16px; margin-top: 6px;
+    border-top: 2px solid var(--green); font-weight:700; font-size: 15px; color: var(--green-dark);
+  }
+
+  .toast{
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--green-dark); border: 2px solid var(--green); color: var(--cream);
+    padding: 12px 20px; border-radius: 10px; font-size: 13.5px; opacity:0;
+    transition: all .25s ease; pointer-events:none; z-index: 50; font-weight:600;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  .stock-current{ font-weight:700; font-size: 14px; }
+  .stock-low{ color: var(--rust-dark); }
+  .stock-ok{ color: var(--green-dark); }
+
+  .adj-toggle{ display:flex; gap:8px; margin-bottom:4px; }
+  .adj-toggle button{
+    flex:1; padding: 9px; border-radius:8px; border: 2px solid var(--green-dark);
+    background: var(--white); color: var(--green-dark); font-weight:700; font-size:12.5px; cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .adj-toggle button.active-in{ background: var(--green); color: var(--cream); }
+  .adj-toggle button.active-out{ background: var(--rust); color: var(--white); border-color: var(--rust-dark); }
+
+  svg.trend text{ font-family: 'IBM Plex Mono', monospace; }
+
+  .ingredient-row{
+    display:grid; grid-template-columns: 1.6fr 0.8fr 0.8fr auto; gap: 10px; align-items:end;
+    margin-bottom: 10px;
+  }
+  .ingredient-row .field{ margin:0; }
+  .remove-row-btn{
+    background: var(--white); border: 2px solid var(--rust); color: var(--rust-dark);
+    border-radius: 7px; padding: 9px 12px; cursor:pointer; font-size: 12px; font-weight:700;
+    font-family: 'Inter', sans-serif; height: fit-content;
+  }
+  .remove-row-btn:hover{ background: var(--rust); color: var(--white); }
+
+  .sale-row{
+    display:grid; grid-template-columns: 1.8fr 0.9fr auto; gap: 10px; align-items:end;
+    margin-bottom: 10px;
+  }
+  .sale-row .field{ margin:0; }
+
+  .recipe-item{
+    border: 2px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+    background: var(--cream-soft);
+  }
+  .recipe-item .recipe-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px; }
+  .recipe-item .recipe-name{ font-family:'Inter', sans-serif; font-weight:700; font-size: 14.5px; color: var(--green-dark); }
+  .recipe-item .recipe-actions{ display:flex; gap:8px; }
+  .recipe-item ul{ margin:0; padding-left: 18px; font-size: 13px; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+  .recipe-item ul li{ margin-bottom: 2px; }
+
+  .badge{
+    display:inline-block; font-size: 10.5px; font-weight:700; padding: 2px 8px; border-radius: 999px;
+    font-family:'Inter', sans-serif;
+  }
+  .badge-in{ background:#e2f3e8; color: var(--green-dark); }
+  .badge-out{ background:#fbe6e2; color: var(--rust-dark); }
+  .badge-sale{ background:#fff2cf; color:#8a6a10; }
+
+  @media(max-width:560px){
+    .grid, .row-3, .stat-row{ grid-template-columns: 1fr; }
+    header{ align-items:flex-start; }
+    header img.logo{ width: 56px; }
+    h1{ font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img class="logo" id="brand-logo" src="" alt="Logo Moody Space">
+    <div class="htext">
+      <div class="eyebrow">Moody Space · Gudang &amp; Belanja</div>
+      <h1>Catatan Pembelian Bahan</h1>
+      <div class="sub">Setiap pembelian dan pemakaian bahan dicatat di sini, supaya di akhir bulan pemilik bisa lihat total pemakaian dan sisa stok tiap bahan dengan jelas.</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="input">Input Pembelian</button>
+    <button data-tab="riwayat">Riwayat</button>
+    <button data-tab="resep">Resep Produk</button>
+    <button data-tab="penjualan">Penjualan</button>
+    <button data-tab="stok">Stok</button>
+    <button data-tab="ringkasan">Ringkasan Bulanan</button>
+  </nav>
+
+  <!-- INPUT PANEL -->
+  <section class="panel active" id="panel-input">
+    <div class="card">
+      <h2>Catat pembelian baru</h2>
+      <div class="hint">Isi setiap kali belanja bahan. Total harga terisi otomatis, dan stok bahan ini akan otomatis bertambah.</div>
+      <div class="grid">
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="field">
+          <label>Nama bahan</label>
+          <input type="text" id="f-item" placeholder="Contoh: Biji Kopi Arabika" list="item-suggestions">
+          <datalist id="item-suggestions"></datalist>
+        </div>
+        <div class="field full">
+          <div class="row-3">
+            <div class="field">
+              <label>Jumlah</label>
+              <input type="number" id="f-qty" placeholder="0" min="0" step="any">
+            </div>
+            <div class="field">
+              <label>Satuan</label>
+              <select id="f-unit">
+                <option value="kg">kg</option>
+                <option value="gram">gram</option>
+                <option value="liter">liter</option>
+                <option value="ml">ml</option>
+                <option value="pcs">pcs</option>
+                <option value="pack">pack</option>
+                <option value="botol">botol</option>
+                <option value="karton">karton</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Harga satuan (Rp)</label>
+              <input type="number" id="f-price" placeholder="0" min="0" step="any">
+            </div>
+          </div>
+          <div class="total-preview" id="total-preview">Total: Rp 0</div>
+        </div>
+        <div class="field">
+          <label>Kategori</label>
+          <select id="f-category">
+            <option value="">Pilih kategori</option>
+            <option>Bahan Baku Minuman</option>
+            <option>Bahan Baku Makanan</option>
+            <option>Kemasan &amp; Packaging</option>
+            <option>Kebersihan &amp; Sanitasi</option>
+            <option>Alat &amp; Perlengkapan</option>
+            <option>Operasional Lainnya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Supplier / toko (opsional)</label>
+          <input type="text" id="f-supplier" placeholder="Contoh: Toko Sumber Rejeki">
+        </div>
+        <div class="field full">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="f-notes" placeholder="Catatan tambahan, misalnya alasan beli lebih banyak">
+        </div>
+      </div>
+      <button class="primary" id="btn-save">+ Simpan Pembelian</button>
+    </div>
+  </section>
+
+  <!-- RIWAYAT PANEL -->
+  <section class="panel" id="panel-riwayat">
+    <div class="card">
+      <div class="filter-bar">
+        <div class="filters">
+          <div class="field">
+            <label>Filter bulan</label>
+            <input type="month" id="riwayat-month">
+          </div>
+          <div class="field">
+            <label>Filter kategori</label>
+            <select id="riwayat-category">
+              <option value="">Semua kategori</option>
+              <option>Bahan Baku Minuman</option>
+              <option>Bahan Baku Makanan</option>
+              <option>Kemasan &amp; Packaging</option>
+              <option>Kebersihan &amp; Sanitasi</option>
+              <option>Alat &amp; Perlengkapan</option>
+              <option>Operasional Lainnya</option>
+            </select>
+          </div>
+        </div>
+        <div class="toolbar-actions">
+          <button class="secondary" id="btn-clear-filter">Tampilkan Semua</button>
+          <button class="secondary" id="btn-export">Unduh CSV</button>
+        </div>
+      </div>
+      <div id="riwayat-table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- RESEP PANEL -->
+  <section class="panel" id="panel-resep">
+    <div class="card">
+      <h2>Bikin resep produk</h2>
+      <div class="hint">Isi 1x per produk: berapa banyak tiap bahan dipakai untuk membuat 1 porsi/1 pcs produk ini. Nanti dipakai untuk hitung otomatis pemakaian bahan waktu produk ini terjual.</div>
+      <div class="grid">
+        <div class="field full">
+          <label>Nama produk</label>
+          <input type="text" id="r-product" placeholder="Contoh: Cappuccino Regular">
+        </div>
+      </div>
+      <div id="recipe-ingredient-rows"></div>
+      <button class="secondary" id="btn-add-ingredient-row" style="margin-top:10px;">+ Tambah Bahan</button>
+      <div style="margin-top:16px;">
+        <button class="primary" id="btn-save-recipe">Simpan Resep</button>
+        <button class="secondary" id="btn-cancel-edit-recipe" style="display:none; margin-left:10px;">Batal Edit</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Daftar resep produk</h2>
+      <div class="hint">Klik "Edit" untuk mengubah komposisi bahan sebuah produk.</div>
+      <div id="recipe-list-wrap"></div>
+    </div>
+  </section>
+
+  <!-- PENJUALAN PANEL -->
+  <section class="panel" id="panel-penjualan">
+    <div class="card">
+      <h2>Catat produk terjual</h2>
+      <div class="hint">Tambahkan semua produk yang terjual hari ini, boleh lebih dari satu. Pemakaian bahan akan dihitung otomatis dari resep dan langsung mengurangi stok.</div>
+      <div class="grid">
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="s-date">
+        </div>
+        <div class="field">
+          <label>Catatan (opsional, berlaku untuk semua baris)</label>
+          <input type="text" id="s-notes" placeholder="Opsional">
+        </div>
+      </div>
+
+      <div id="sale-rows" style="margin-top:14px;"></div>
+      <button class="secondary" id="btn-add-sale-row" style="margin-top:6px;">+ Tambah Produk</button>
+
+      <div class="hint" id="s-preview" style="margin-top:14px;"></div>
+      <button class="primary" id="btn-save-sale">Simpan Semua Penjualan</button>
+    </div>
+
+    <div class="card">
+      <h2>Riwayat penjualan</h2>
+      <div id="sales-table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- STOK PANEL -->
+  <section class="panel" id="panel-stok">
+    <div class="card">
+      <h2>Catat pemakaian / koreksi stok manual</h2>
+      <div class="hint">Gunakan ini untuk bahan yang terpakai di luar penjualan (rusak, tumpah, dipakai internal) atau hasil hitung ulang fisik (stok opname). Pemakaian dari penjualan sudah otomatis, tidak perlu dicatat di sini.</div>
+      <div class="grid">
+        <div class="field">
+          <label>Nama bahan</label>
+          <input type="text" id="a-item" placeholder="Pilih / ketik nama bahan" list="item-suggestions">
+        </div>
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="a-date">
+        </div>
+        <div class="field full">
+          <label>Jenis penyesuaian</label>
+          <div class="adj-toggle">
+            <button type="button" id="btn-adj-out" class="active-out">− Pemakaian / Keluar</button>
+            <button type="button" id="btn-adj-in">+ Koreksi / Tambah</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Jumlah</label>
+          <input type="number" id="a-qty" placeholder="0" min="0" step="any">
+        </div>
+        <div class="field">
+          <label>Satuan</label>
+          <select id="a-unit">
+            <option value="kg">kg</option>
+            <option value="gram">gram</option>
+            <option value="liter">liter</option>
+            <option value="ml">ml</option>
+            <option value="pcs">pcs</option>
+            <option value="pack">pack</option>
+            <option value="botol">botol</option>
+            <option value="karton">karton</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Catatan (opsional)</label>
+          <input type="text" id="a-notes" placeholder="Contoh: dipakai untuk event, tumpah, hasil stok opname">
+        </div>
+      </div>
+      <button class="primary" id="btn-save-adj">Simpan Penyesuaian</button>
+    </div>
+
+    <div class="card">
+      <h2>Stok bahan saat ini</h2>
+      <div class="hint">Stok = total pembelian − total pemakaian (manual + otomatis dari penjualan) − koreksi.</div>
+      <div id="stock-table-wrap"></div>
+    </div>
+
+    <div class="card">
+      <h2>Riwayat pergerakan stok</h2>
+      <div class="hint">20 pergerakan terakhir. Pergerakan dari penjualan hanya bisa dihapus lewat tab Penjualan.</div>
+      <div id="movement-table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- RINGKASAN PANEL -->
+  <section class="panel" id="panel-ringkasan">
+    <div class="stat-row" id="summary-stats"></div>
+
+    <div class="card">
+      <h2>Tren belanja bulanan</h2>
+      <div class="hint">Total pengeluaran per bulan, untuk melihat naik-turunnya belanja dari waktu ke waktu.</div>
+      <div id="trend-chart-wrap"></div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <div class="field">
+          <label>Bulan evaluasi</label>
+          <input type="month" id="ringkasan-month">
+        </div>
+      </div>
+      <div class="ledger" id="ledger-output"></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LOGO_BASE64 = "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6MsBt69ovd3fhDnnAOs2inP3u5T7ReXv561s9wa3XOwXflx2iQi+KU6m7Oh9bsvzdXD3Kni/rLj+vtVjrz0qXlOXf41T6jvKUwWZbxH688V1AgjgjK2Cc38sbQh/sZR9dokYeIl2dsVXH1vokLMPjBkn0DGgF7/1FHECVe2ULKqMP/ABrkOLAFd49RnjxNo9HWSIckZ39v4hUgNRH1bG9/0g24DYE4ZeedaQUEf7GIuRCuJ3atyVBsTWSaQ+zrGx95rX62bl2ulBYSrcS1k7CRb5ndvuGlYhUsqVaeW9u+lX95V15qEHXzs9L6pL7uM0xouTBGxP73ONz9e6Mh20/nxLZ5w+xQKni+AA61xx/wy9AiVS6WBfi5x7YPMN8z/iEY6IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI+pX/Dx5QgbiERNsdAAAAAElFTkSuQmCC";
+document.getElementById('brand-logo').src = "data:image/png;base64," + LOGO_BASE64;
+
+const STORAGE_KEY = 'moody-space-purchases';
+const ADJ_KEY = 'moody-space-stock-adjustments';
+const RECIPE_KEY = 'moody-space-recipes';
+const SALES_KEY = 'moody-space-sales';
+let purchases = [];
+let adjustments = [];
+let recipes = [];
+let sales = [];
+let adjDirection = 'out'; // 'out' = pemakaian (kurang), 'in' = koreksi (tambah)
+let editingRecipeId = null;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function currentMonthStr(){ return new Date().toISOString().slice(0,7); }
+function fmtRupiah(n){ return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
+function fmtNum(n){ return Number(n).toLocaleString('id-ID', {maximumFractionDigits: 2}); }
+function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
+
+// ---------- Storage ----------
+async function loadAll(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    purchases = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ purchases = []; }
+  try{
+    const res2 = await window.storage.get(ADJ_KEY, true);
+    adjustments = res2 && res2.value ? JSON.parse(res2.value) : [];
+  }catch(e){ adjustments = []; }
+  try{
+    const res3 = await window.storage.get(RECIPE_KEY, true);
+    recipes = res3 && res3.value ? JSON.parse(res3.value) : [];
+  }catch(e){ recipes = []; }
+  try{
+    const res4 = await window.storage.get(SALES_KEY, true);
+    sales = res4 && res4.value ? JSON.parse(res4.value) : [];
+  }catch(e){ sales = []; }
+}
+async function savePurchases(){
+  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(purchases), true); }
+  catch(e){ showToast('Gagal menyimpan data pembelian.'); }
+}
+async function saveAdjustments(){
+  try{ await window.storage.set(ADJ_KEY, JSON.stringify(adjustments), true); }
+  catch(e){ showToast('Gagal menyimpan data stok.'); }
+}
+async function saveRecipes(){
+  try{ await window.storage.set(RECIPE_KEY, JSON.stringify(recipes), true); }
+  catch(e){ showToast('Gagal menyimpan resep.'); }
+}
+async function saveSales(){
+  try{ await window.storage.set(SALES_KEY, JSON.stringify(sales), true); }
+  catch(e){ showToast('Gagal menyimpan data penjualan.'); }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+function refreshItemSuggestions(){
+  const names = new Set();
+  purchases.forEach(p=> names.add(p.item.trim()));
+  adjustments.forEach(a=> names.add(a.item.trim()));
+  const dl = document.getElementById('item-suggestions');
+  dl.innerHTML = [...names].sort().map(n=>`<option value="${escapeHtml(n)}">`).join('');
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'riwayat') renderRiwayat();
+    if(btn.dataset.tab === 'resep') { renderIngredientRows(); renderRecipeList(); }
+    if(btn.dataset.tab === 'penjualan') { populateProductSelect(); renderSales(); }
+    if(btn.dataset.tab === 'stok') { renderStock(); renderMovements(); }
+    if(btn.dataset.tab === 'ringkasan') renderRingkasan();
+  });
+});
+
+// ---------- Input form (pembelian) ----------
+document.getElementById('f-date').value = todayStr();
+
+function updateTotalPreview(){
+  const qty = parseFloat(document.getElementById('f-qty').value) || 0;
+  const price = parseFloat(document.getElementById('f-price').value) || 0;
+  document.getElementById('total-preview').textContent = 'Total: ' + fmtRupiah(qty * price);
+}
+document.getElementById('f-qty').addEventListener('input', updateTotalPreview);
+document.getElementById('f-price').addEventListener('input', updateTotalPreview);
+
+document.getElementById('btn-save').addEventListener('click', async ()=>{
+  const date = document.getElementById('f-date').value;
+  const item = document.getElementById('f-item').value.trim();
+  const qty = parseFloat(document.getElementById('f-qty').value);
+  const unit = document.getElementById('f-unit').value;
+  const price = parseFloat(document.getElementById('f-price').value);
+  const category = document.getElementById('f-category').value;
+  const supplier = document.getElementById('f-supplier').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+
+  if(!date || !item || !qty || qty <= 0 || isNaN(price) || price < 0){
+    showToast('Isi tanggal, nama bahan, jumlah, dan harga dengan benar.');
+    return;
+  }
+
+  const entry = {
+    id: uid(), date, item, category, qty, unit, price,
+    total: qty * price, supplier, notes,
+    createdAt: new Date().toISOString()
+  };
+  purchases.push(entry);
+  await savePurchases();
+  refreshItemSuggestions();
+  showToast('Pembelian "' + item + '" disimpan.');
+
+  document.getElementById('f-item').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-supplier').value = '';
+  document.getElementById('f-notes').value = '';
+  updateTotalPreview();
+});
+
+// ---------- Riwayat ----------
+document.getElementById('riwayat-month').value = currentMonthStr();
+document.getElementById('riwayat-month').addEventListener('change', renderRiwayat);
+document.getElementById('riwayat-category').addEventListener('change', renderRiwayat);
+document.getElementById('btn-clear-filter').addEventListener('click', ()=>{
+  document.getElementById('riwayat-month').value = '';
+  document.getElementById('riwayat-category').value = '';
+  renderRiwayat();
+});
+document.getElementById('btn-export').addEventListener('click', exportCSV);
+
+function renderRiwayat(){
+  const monthFilter = document.getElementById('riwayat-month').value;
+  const catFilter = document.getElementById('riwayat-category').value;
+  let list = [...purchases].sort((a,b)=> b.date.localeCompare(a.date));
+  if(monthFilter) list = list.filter(p => p.date.slice(0,7) === monthFilter);
+  if(catFilter) list = list.filter(p => p.category === catFilter);
+
+  const wrap = document.getElementById('riwayat-table-wrap');
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada catatan pembelian untuk filter ini.</div>';
+    return;
+  }
+  let rows = list.map(p => `
+    <tr>
+      <td>${p.date}</td>
+      <td class="name-col">${escapeHtml(p.item)}</td>
+      <td>${p.category ? '<span class="chip">'+escapeHtml(p.category)+'</span>' : '—'}</td>
+      <td>${fmtNum(p.qty)} ${escapeHtml(p.unit)}</td>
+      <td>${fmtRupiah(p.price)}</td>
+      <td>${fmtRupiah(p.total)}</td>
+      <td>${escapeHtml(p.supplier || '—')}</td>
+      <td><button class="del-btn" data-id="${p.id}">Hapus</button></td>
+    </tr>
+  `).join('');
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Tanggal</th><th>Bahan</th><th>Kategori</th><th>Jumlah</th><th>Harga satuan</th><th>Total</th><th>Supplier</th><th></th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      purchases = purchases.filter(p => p.id !== btn.dataset.id);
+      await savePurchases();
+      renderRiwayat();
+      showToast('Catatan dihapus.');
+    });
+  });
+}
+
+function exportCSV(){
+  const monthFilter = document.getElementById('riwayat-month').value;
+  const catFilter = document.getElementById('riwayat-category').value;
+  let list = [...purchases].sort((a,b)=> a.date.localeCompare(b.date));
+  if(monthFilter) list = list.filter(p => p.date.slice(0,7) === monthFilter);
+  if(catFilter) list = list.filter(p => p.category === catFilter);
+  if(list.length === 0){ showToast('Tidak ada data untuk diunduh.'); return; }
+  const header = ['Tanggal','Bahan','Kategori','Jumlah','Satuan','Harga Satuan','Total','Supplier','Catatan'];
+  const rows = list.map(p => [p.date, p.item, p.category, p.qty, p.unit, p.price, p.total, p.supplier, p.notes]
+    .map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(["\uFEFF" + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'pembelian-moody-space' + (monthFilter ? '-' + monthFilter : '') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Stok ----------
+document.getElementById('a-date').value = todayStr();
+document.getElementById('btn-adj-out').addEventListener('click', ()=>{
+  adjDirection = 'out';
+  document.getElementById('btn-adj-out').classList.add('active-out');
+  document.getElementById('btn-adj-in').classList.remove('active-in');
+});
+document.getElementById('btn-adj-in').addEventListener('click', ()=>{
+  adjDirection = 'in';
+  document.getElementById('btn-adj-in').classList.add('active-in');
+  document.getElementById('btn-adj-out').classList.remove('active-out');
+});
+
+document.getElementById('btn-save-adj').addEventListener('click', async ()=>{
+  const item = document.getElementById('a-item').value.trim();
+  const date = document.getElementById('a-date').value;
+  const qty = parseFloat(document.getElementById('a-qty').value);
+  const unit = document.getElementById('a-unit').value;
+  const notes = document.getElementById('a-notes').value.trim();
+
+  if(!item || !date || !qty || qty <= 0){
+    showToast('Isi nama bahan, tanggal, dan jumlah dengan benar.');
+    return;
+  }
+  const delta = adjDirection === 'out' ? -Math.abs(qty) : Math.abs(qty);
+  adjustments.push({ id: uid(), item, date, unit, delta, reason: adjDirection, notes, createdAt: new Date().toISOString() });
+  await saveAdjustments();
+  refreshItemSuggestions();
+  showToast((adjDirection === 'out' ? 'Pemakaian' : 'Koreksi') + ' "' + item + '" disimpan.');
+
+  document.getElementById('a-item').value = '';
+  document.getElementById('a-qty').value = '';
+  document.getElementById('a-notes').value = '';
+  renderStock();
+});
+
+function computeStock(){
+  const map = {}; // key: item lower -> {item, unit, bought, used, current}
+  purchases.forEach(p=>{
+    const key = p.item.trim().toLowerCase();
+    if(!map[key]) map[key] = { item: p.item.trim(), unit: p.unit, bought: 0, adjust: 0 };
+    map[key].bought += p.qty;
+    map[key].unit = p.unit;
+  });
+  adjustments.forEach(a=>{
+    const key = a.item.trim().toLowerCase();
+    if(!map[key]) map[key] = { item: a.item.trim(), unit: a.unit, bought: 0, adjust: 0 };
+    map[key].adjust += a.delta;
+  });
+  return Object.values(map).map(v => ({...v, current: v.bought + v.adjust})).sort((a,b)=> a.item.localeCompare(b.item));
+}
+
+function renderStock(){
+  const stock = computeStock();
+  const wrap = document.getElementById('stock-table-wrap');
+  if(stock.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada data bahan. Mulai dengan mencatat pembelian.</div>';
+    return;
+  }
+  const rows = stock.map(s => `
+    <tr>
+      <td class="name-col">${escapeHtml(s.item)}</td>
+      <td>${fmtNum(s.bought)} ${escapeHtml(s.unit)}</td>
+      <td class="stock-current ${s.current <= 0 ? 'stock-low' : 'stock-ok'}">${fmtNum(s.current)} ${escapeHtml(s.unit)}</td>
+    </tr>
+  `).join('');
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Bahan</th><th>Total dibeli (sepanjang waktu)</th><th>Stok saat ini</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// ---------- Ringkasan Bulanan ----------
+document.getElementById('ringkasan-month').value = currentMonthStr();
+document.getElementById('ringkasan-month').addEventListener('change', renderRingkasan);
+
+const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function renderTrendChart(){
+  const wrap = document.getElementById('trend-chart-wrap');
+  if(purchases.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada data belanja untuk ditampilkan.</div>';
+    return;
+  }
+  // build map of month -> total, over last 6 months ending at current month
+  const now = new Date();
+  const months = [];
+  for(let i=5; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(d.toISOString().slice(0,7));
+  }
+  const totals = months.map(m => purchases.filter(p=>p.date.slice(0,7)===m).reduce((s,p)=>s+p.total,0));
+  const max = Math.max(...totals, 1);
+
+  const W = 640, H = 200, padL = 10, padR = 10, padB = 30, padT = 16;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const barGap = 18;
+  const barW = (chartW - barGap*(months.length-1)) / months.length;
+
+  let bars = '';
+  months.forEach((m,i)=>{
+    const val = totals[i];
+    const h = max > 0 ? (val/max)*chartH : 0;
+    const x = padL + i*(barW+barGap);
+    const y = padT + (chartH - h);
+    const [y2,mo] = m.split('-');
+    bars += `
+      <rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h,2)}" rx="4" fill="var(--green,#11754d)" />
+      <text x="${x + barW/2}" y="${H-10}" text-anchor="middle" font-size="11" fill="#4f6b58">${MONTH_SHORT[parseInt(mo,10)-1]}</text>
+      <text x="${x + barW/2}" y="${y-6}" text-anchor="middle" font-size="10" fill="#0b4a32" font-weight="600">${val>0 ? (val>=1000000 ? (val/1000000).toFixed(1)+'jt' : Math.round(val/1000)+'rb') : ''}</text>
+    `;
+  });
+
+  wrap.innerHTML = `<svg class="trend" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block;">
+    <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#cfe3d4" stroke-width="2" />
+    ${bars}
+  </svg>`;
+}
+
+function renderRingkasan(){
+  const month = document.getElementById('ringkasan-month').value || currentMonthStr();
+  const list = purchases.filter(p => p.date.slice(0,7) === month);
+
+  const totalSpend = list.reduce((s,p)=> s + p.total, 0);
+  const uniqueItems = new Set(list.map(p=>p.item.toLowerCase().trim())).size;
+  const statWrap = document.getElementById('summary-stats');
+  statWrap.innerHTML = `
+    <div class="stat"><div class="label">Total belanja bulan ini</div><div class="value">${fmtRupiah(totalSpend)}</div></div>
+    <div class="stat"><div class="label">Jumlah transaksi</div><div class="value">${list.length}</div></div>
+    <div class="stat"><div class="label">Jenis bahan dibeli</div><div class="value">${uniqueItems}</div></div>
+  `;
+
+  renderTrendChart();
+
+  const ledger = document.getElementById('ledger-output');
+  const [y,m] = month.split('-');
+  const monthLabel = MONTH_NAMES[parseInt(m,10)-1] + ' ' + y;
+
+  if(list.length === 0){
+    ledger.innerHTML = `
+      <div class="ledger-head"><div class="month">${monthLabel}</div><div class="cap">Ringkasan Pembelian per Bahan</div></div>
+      <div class="empty">Belum ada pembelian tercatat di bulan ini.</div>
+    `;
+    return;
+  }
+
+  const groups = {};
+  list.forEach(p=>{
+    const key = p.item.trim();
+    if(!groups[key]) groups[key] = {item:key, unit:p.unit, qty:0, total:0, count:0};
+    groups[key].qty += p.qty;
+    groups[key].total += p.total;
+    groups[key].count += 1;
+  });
+  const arr = Object.values(groups).sort((a,b)=> b.total - a.total);
+  const maxTotal = Math.max(...arr.map(g=>g.total));
+
+  const rowsHtml = arr.map(g => `
+    <div class="ledger-row">
+      <div style="flex:1; min-width:0;">
+        <div class="li-name">${escapeHtml(g.item)}</div>
+        <div class="li-meta">${fmtNum(g.qty)} ${escapeHtml(g.unit)} · ${g.count}x beli</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(g.total/maxTotal*100).toFixed(1)}%"></div></div>
+      </div>
+      <div class="li-right">${fmtRupiah(g.total)}</div>
+    </div>
+  `).join('');
+
+  ledger.innerHTML = `
+    <div class="ledger-head"><div class="month">${monthLabel}</div><div class="cap">Ringkasan Pembelian per Bahan</div></div>
+    ${rowsHtml}
+    <div class="ledger-total"><span>Total Belanja</span><span>${fmtRupiah(totalSpend)}</span></div>
+  `;
+}
+
+// ---------- Resep Produk ----------
+function ingredientRowTemplate(ing){
+  ing = ing || { item:'', qty:'', unit:'kg' };
+  const rowId = 'row_' + uid();
+  return `
+    <div class="ingredient-row" data-row-id="${rowId}">
+      <div class="field">
+        <label>Bahan</label>
+        <input type="text" class="ing-item" placeholder="Nama bahan" list="item-suggestions" value="${escapeHtml(ing.item)}">
+      </div>
+      <div class="field">
+        <label>Jumlah per 1 produk</label>
+        <input type="number" class="ing-qty" placeholder="0" min="0" step="any" value="${ing.qty}">
+      </div>
+      <div class="field">
+        <label>Satuan</label>
+        <select class="ing-unit">
+          <option value="kg">kg</option>
+          <option value="gram">gram</option>
+          <option value="liter">liter</option>
+          <option value="ml">ml</option>
+          <option value="pcs">pcs</option>
+          <option value="pack">pack</option>
+          <option value="botol">botol</option>
+          <option value="karton">karton</option>
+        </select>
+      </div>
+      <button type="button" class="remove-row-btn" onclick="this.closest('.ingredient-row').remove()">Hapus</button>
+    </div>
+  `;
+}
+
+function renderIngredientRows(rows){
+  const wrap = document.getElementById('recipe-ingredient-rows');
+  wrap.innerHTML = '';
+  const initial = rows && rows.length ? rows : [{item:'',qty:'',unit:'kg'}];
+  initial.forEach(ing=>{
+    wrap.insertAdjacentHTML('beforeend', ingredientRowTemplate(ing));
+  });
+  // set unit selects to correct value
+  if(rows && rows.length){
+    const rowEls = wrap.querySelectorAll('.ingredient-row');
+    rows.forEach((ing,i)=>{
+      const sel = rowEls[i].querySelector('.ing-unit');
+      if(sel) sel.value = ing.unit || 'kg';
+    });
+  }
+}
+
+document.getElementById('btn-add-ingredient-row').addEventListener('click', ()=>{
+  document.getElementById('recipe-ingredient-rows').insertAdjacentHTML('beforeend', ingredientRowTemplate());
+});
+
+function resetRecipeForm(){
+  editingRecipeId = null;
+  document.getElementById('r-product').value = '';
+  renderIngredientRows();
+  document.getElementById('btn-cancel-edit-recipe').style.display = 'none';
+  document.getElementById('btn-save-recipe').textContent = 'Simpan Resep';
+}
+
+document.getElementById('btn-cancel-edit-recipe').addEventListener('click', resetRecipeForm);
+
+document.getElementById('btn-save-recipe').addEventListener('click', async ()=>{
+  const product = document.getElementById('r-product').value.trim();
+  if(!product){ showToast('Isi nama produk dulu.'); return; }
+  const rows = [...document.querySelectorAll('#recipe-ingredient-rows .ingredient-row')];
+  const ingredients = rows.map(r=>({
+    item: r.querySelector('.ing-item').value.trim(),
+    qty: parseFloat(r.querySelector('.ing-qty').value),
+    unit: r.querySelector('.ing-unit').value
+  })).filter(i=> i.item && i.qty > 0);
+
+  if(ingredients.length === 0){ showToast('Tambahkan minimal 1 bahan dengan jumlah yang valid.'); return; }
+
+  if(editingRecipeId){
+    const idx = recipes.findIndex(r=>r.id===editingRecipeId);
+    if(idx>=0) recipes[idx] = { ...recipes[idx], product, ingredients };
+    showToast('Resep "' + product + '" diperbarui.');
+  } else {
+    const dup = recipes.find(r=> r.product.trim().toLowerCase() === product.toLowerCase());
+    if(dup){ showToast('Produk ini sudah punya resep. Klik Edit untuk mengubahnya.'); return; }
+    recipes.push({ id: uid(), product, ingredients });
+    showToast('Resep "' + product + '" disimpan.');
+  }
+  await saveRecipes();
+  refreshItemSuggestions();
+  resetRecipeForm();
+  renderRecipeList();
+});
+
+function renderRecipeList(){
+  const wrap = document.getElementById('recipe-list-wrap');
+  if(recipes.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada resep produk. Buat resep pertama di atas.</div>';
+    return;
+  }
+  wrap.innerHTML = recipes.map(r => `
+    <div class="recipe-item">
+      <div class="recipe-head">
+        <div class="recipe-name">${escapeHtml(r.product)}</div>
+        <div class="recipe-actions">
+          <button class="secondary" data-edit="${r.id}">Edit</button>
+          <button class="del-btn" data-del="${r.id}">Hapus</button>
+        </div>
+      </div>
+      <ul>${r.ingredients.map(i=>`<li>${fmtNum(i.qty)} ${escapeHtml(i.unit)} — ${escapeHtml(i.item)}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = recipes.find(x=>x.id===btn.dataset.edit);
+      if(!r) return;
+      editingRecipeId = r.id;
+      document.getElementById('r-product').value = r.product;
+      renderIngredientRows(r.ingredients);
+      document.getElementById('btn-cancel-edit-recipe').style.display = 'inline-block';
+      document.getElementById('btn-save-recipe').textContent = 'Simpan Perubahan';
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+  wrap.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      recipes = recipes.filter(r=>r.id !== btn.dataset.del);
+      await saveRecipes();
+      renderRecipeList();
+      showToast('Resep dihapus.');
+    });
+  });
+}
+
+// ---------- Penjualan ----------
+document.getElementById('s-date').value = todayStr();
+
+function saleRowTemplate(){
+  return `
+    <div class="sale-row" data-row-id="row_${uid()}">
+      <div class="field">
+        <label>Produk</label>
+        <select class="sale-product"><option value="">Pilih produk</option></select>
+      </div>
+      <div class="field">
+        <label>Jumlah terjual</label>
+        <input type="number" class="sale-qty" placeholder="0" min="0" step="any">
+      </div>
+      <button type="button" class="remove-row-btn" onclick="this.closest('.sale-row').remove(); updateSalePreview();">Hapus</button>
+    </div>
+  `;
+}
+
+function addSaleRow(){
+  document.getElementById('sale-rows').insertAdjacentHTML('beforeend', saleRowTemplate());
+  const rows = document.querySelectorAll('#sale-rows .sale-row');
+  const newRow = rows[rows.length-1];
+  fillProductOptions(newRow.querySelector('.sale-product'));
+  newRow.querySelector('.sale-product').addEventListener('change', updateSalePreview);
+  newRow.querySelector('.sale-qty').addEventListener('input', updateSalePreview);
+}
+document.getElementById('btn-add-sale-row').addEventListener('click', addSaleRow);
+
+function fillProductOptions(sel){
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Pilih produk</option>' +
+    recipes.map(r=>`<option value="${r.id}">${escapeHtml(r.product)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===current)) sel.value = current;
+}
+
+function populateProductSelect(){
+  const wrap = document.getElementById('sale-rows');
+  if(wrap.children.length === 0){ addSaleRow(); return; }
+  wrap.querySelectorAll('.sale-product').forEach(fillProductOptions);
+  updateSalePreview();
+}
+
+function updateSalePreview(){
+  const preview = document.getElementById('s-preview');
+  if(recipes.length === 0){ preview.textContent = 'Belum ada resep. Buat dulu di tab Resep Produk.'; return; }
+  const rows = [...document.querySelectorAll('#sale-rows .sale-row')];
+  const usage = {}; // key: "item|unit" -> total qty
+  let anyValid = false;
+  rows.forEach(row=>{
+    const recipeId = row.querySelector('.sale-product').value;
+    const qty = parseFloat(row.querySelector('.sale-qty').value) || 0;
+    const recipe = recipes.find(r=>r.id===recipeId);
+    if(!recipe || qty <= 0) return;
+    anyValid = true;
+    recipe.ingredients.forEach(ing=>{
+      const key = ing.item + '|' + ing.unit;
+      usage[key] = (usage[key]||0) + ing.qty*qty;
+    });
+  });
+  if(!anyValid){ preview.textContent = 'Pilih produk dan isi jumlah untuk melihat total bahan yang akan terpakai.'; return; }
+  const lines = Object.entries(usage).map(([key,total])=>{
+    const [item,unit] = key.split('|');
+    return `${fmtNum(total)} ${unit} ${item}`;
+  });
+  preview.textContent = 'Total bahan yang akan terpakai: ' + lines.join(', ');
+}
+
+document.getElementById('btn-save-sale').addEventListener('click', async ()=>{
+  const date = document.getElementById('s-date').value;
+  const notes = document.getElementById('s-notes').value.trim();
+  const rows = [...document.querySelectorAll('#sale-rows .sale-row')];
+  const validRows = rows.map(row=>({
+    recipe: recipes.find(r=>r.id===row.querySelector('.sale-product').value),
+    qty: parseFloat(row.querySelector('.sale-qty').value)
+  })).filter(r=> r.recipe && r.qty > 0);
+
+  if(!date || validRows.length === 0){
+    showToast('Isi tanggal, lalu pilih minimal 1 produk dengan jumlah yang valid.');
+    return;
+  }
+
+  const soldNames = [];
+  validRows.forEach(({recipe, qty})=>{
+    const adjIds = [];
+    recipe.ingredients.forEach(ing=>{
+      const adjId = uid();
+      adjIds.push(adjId);
+      adjustments.push({
+        id: adjId, item: ing.item, date, unit: ing.unit,
+        delta: -(ing.qty * qty), reason: 'terjual',
+        notes: 'Otomatis dari penjualan ' + fmtNum(qty) + ' ' + recipe.product,
+        createdAt: new Date().toISOString()
+      });
+    });
+    sales.push({ id: uid(), date, product: recipe.product, qty, notes, adjIds, createdAt: new Date().toISOString() });
+    soldNames.push(recipe.product);
+  });
+
+  await saveAdjustments();
+  await saveSales();
+  showToast('Penjualan tercatat: ' + soldNames.join(', ') + '. Stok bahan diperbarui.');
+
+  document.getElementById('sale-rows').innerHTML = '';
+  document.getElementById('s-notes').value = '';
+  addSaleRow();
+  renderSales();
+});
+
+function renderSales(){
+  const wrap = document.getElementById('sales-table-wrap');
+  if(sales.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada penjualan tercatat.</div>';
+    return;
+  }
+  const list = [...sales].sort((a,b)=> b.date.localeCompare(a.date));
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Tanggal</th><th>Produk</th><th>Jumlah</th><th>Catatan</th><th></th></tr></thead>
+      <tbody>
+        ${list.map(s=>`
+          <tr>
+            <td>${s.date}</td>
+            <td class="name-col">${escapeHtml(s.product)}</td>
+            <td>${fmtNum(s.qty)}</td>
+            <td>${escapeHtml(s.notes || '—')}</td>
+            <td><button class="del-btn" data-id="${s.id}">Hapus</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  wrap.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const sale = sales.find(s=>s.id===btn.dataset.id);
+      if(sale){ adjustments = adjustments.filter(a=> !sale.adjIds.includes(a.id)); }
+      sales = sales.filter(s=>s.id !== btn.dataset.id);
+      await saveSales();
+      await saveAdjustments();
+      renderSales();
+      showToast('Penjualan dihapus, stok bahan dikembalikan.');
+    });
+  });
+}
+
+// ---------- Riwayat pergerakan stok ----------
+function renderMovements(){
+  const wrap = document.getElementById('movement-table-wrap');
+  const movements = [];
+  purchases.forEach(p=> movements.push({ date:p.date, item:p.item, qty:p.qty, unit:p.unit, type:'beli', notes:p.notes || ('Dibeli dari ' + (p.supplier||'—')) }));
+  adjustments.forEach(a=> movements.push({ date:a.date, item:a.item, qty:a.delta, unit:a.unit, type:a.reason, notes:a.notes || '' }));
+  movements.sort((a,b)=> b.date.localeCompare(a.date));
+  const top = movements.slice(0,20);
+  if(top.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada pergerakan stok.</div>';
+    return;
+  }
+  const badge = (type)=>{
+    if(type==='beli') return '<span class="badge badge-in">Pembelian</span>';
+    if(type==='in') return '<span class="badge badge-in">Koreksi</span>';
+    if(type==='terjual') return '<span class="badge badge-sale">Terjual</span>';
+    return '<span class="badge badge-out">Pemakaian</span>';
+  };
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Tanggal</th><th>Bahan</th><th>Jenis</th><th>Jumlah</th><th>Catatan</th></tr></thead>
+      <tbody>
+        ${top.map(m=>`
+          <tr>
+            <td>${m.date}</td>
+            <td class="name-col">${escapeHtml(m.item)}</td>
+            <td>${badge(m.type)}</td>
+            <td>${m.qty>0?'+':''}${fmtNum(m.qty)} ${escapeHtml(m.unit)}</td>
+            <td>${escapeHtml(m.notes || '—')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ---------- Init ----------
+(async function init(){
+  await loadAll();
+  refreshItemSuggestions();
+  updateTotalPreview();
+  renderRiwayat();
+  renderIngredientRows();
+  renderRecipeList();
+  populateProductSelect();
+  renderSales();
+  renderStock();
+  renderMovements();
+  renderRingkasan();
+})();
+</script>
+</body>
+</html>
