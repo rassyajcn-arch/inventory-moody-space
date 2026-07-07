@@ -276,6 +276,7 @@
       <div class="eyebrow">Moody Space · Gudang &amp; Belanja</div>
       <h1>Catatan Pembelian Bahan</h1>
       <div class="sub">Setiap pembelian dan pemakaian bahan dicatat di sini, supaya di akhir bulan pemilik bisa lihat total pemakaian dan sisa stok tiap bahan dengan jelas.</div>
+      <div class="sub" id="storage-mode-note" style="margin-top:6px; font-weight:600;"></div>
     </div>
   </header>
 
@@ -345,6 +346,15 @@
           <label>Supplier / toko (opsional)</label>
           <input type="text" id="f-supplier" placeholder="Contoh: Toko Sumber Rejeki">
         </div>
+        <div class="field">
+          <label>Metode pembayaran</label>
+          <select id="f-payment">
+            <option value="">Pilih metode</option>
+            <option>Cash</option>
+            <option>Cashless</option>
+            <option>Petty Cash</option>
+          </select>
+        </div>
         <div class="field full">
           <label>Catatan (opsional)</label>
           <input type="text" id="f-notes" placeholder="Catatan tambahan, misalnya alasan beli lebih banyak">
@@ -373,6 +383,15 @@
               <option>Kebersihan &amp; Sanitasi</option>
               <option>Alat &amp; Perlengkapan</option>
               <option>Operasional Lainnya</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Filter pembayaran</label>
+            <select id="riwayat-payment">
+              <option value="">Semua metode</option>
+              <option>Cash</option>
+              <option>Cashless</option>
+              <option>Petty Cash</option>
             </select>
           </div>
         </div>
@@ -546,40 +565,92 @@ function fmtNum(n){ return Number(n).toLocaleString('id-ID', {maximumFractionDig
 function uid(){ return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
 
-// ---------- Storage ----------
+// ---------- Storage (Claude shared storage, localStorage fallback, in-memory last resort) ----------
+const hasCloudStorage = (typeof window.storage !== 'undefined' && window.storage !== null);
+let storageMode = 'cloud'; // 'cloud' | 'local' | 'memory'
+const memoryStore = {};
+
+function localStorageWorks(){
+  try{
+    const testKey = '__ms_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+if(!hasCloudStorage){
+  storageMode = localStorageWorks() ? 'local' : 'memory';
+}
+
+async function storageGet(key){
+  if(storageMode === 'cloud'){
+    try{ return await window.storage.get(key, true); }
+    catch(e){ return null; }
+  }
+  if(storageMode === 'local'){
+    const raw = localStorage.getItem(key);
+    return raw ? { key, value: raw, shared: false } : null;
+  }
+  return memoryStore[key] ? { key, value: memoryStore[key], shared: false } : null;
+}
+async function storageSet(key, value){
+  if(storageMode === 'cloud'){
+    return await window.storage.set(key, value, true); // throws on failure, caller catches
+  }
+  if(storageMode === 'local'){
+    localStorage.setItem(key, value); // throws on failure (e.g. blocked storage), caller catches
+    return { key, value, shared: false };
+  }
+  memoryStore[key] = value;
+  return { key, value, shared: false };
+}
+
+function showStandaloneNotice(){
+  if(storageMode === 'cloud') return;
+  const t = document.getElementById('toast');
+  t.textContent = storageMode === 'local'
+    ? 'Mode file lokal: data tersimpan di browser ini saja, tidak otomatis tersinkron ke perangkat lain.'
+    : 'Peringatan: browser ini memblokir penyimpanan. Data TIDAK akan tersimpan setelah halaman ditutup/refresh.';
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 6000);
+}
 async function loadAll(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
+    const res = await storageGet(STORAGE_KEY);
     purchases = res && res.value ? JSON.parse(res.value) : [];
   }catch(e){ purchases = []; }
   try{
-    const res2 = await window.storage.get(ADJ_KEY, true);
+    const res2 = await storageGet(ADJ_KEY);
     adjustments = res2 && res2.value ? JSON.parse(res2.value) : [];
   }catch(e){ adjustments = []; }
   try{
-    const res3 = await window.storage.get(RECIPE_KEY, true);
+    const res3 = await storageGet(RECIPE_KEY);
     recipes = res3 && res3.value ? JSON.parse(res3.value) : [];
   }catch(e){ recipes = []; }
   try{
-    const res4 = await window.storage.get(SALES_KEY, true);
+    const res4 = await storageGet(SALES_KEY);
     sales = res4 && res4.value ? JSON.parse(res4.value) : [];
   }catch(e){ sales = []; }
 }
+function errMsg(e){ return (e && e.message) ? e.message : String(e); }
 async function savePurchases(){
-  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(purchases), true); }
-  catch(e){ showToast('Gagal menyimpan data pembelian.'); }
+  try{ await storageSet(STORAGE_KEY, JSON.stringify(purchases)); }
+  catch(e){ showToast('Gagal menyimpan data pembelian: ' + errMsg(e)); }
 }
 async function saveAdjustments(){
-  try{ await window.storage.set(ADJ_KEY, JSON.stringify(adjustments), true); }
-  catch(e){ showToast('Gagal menyimpan data stok.'); }
+  try{ await storageSet(ADJ_KEY, JSON.stringify(adjustments)); }
+  catch(e){ showToast('Gagal menyimpan data stok: ' + errMsg(e)); }
 }
 async function saveRecipes(){
-  try{ await window.storage.set(RECIPE_KEY, JSON.stringify(recipes), true); }
-  catch(e){ showToast('Gagal menyimpan resep.'); }
+  try{ await storageSet(RECIPE_KEY, JSON.stringify(recipes)); }
+  catch(e){ showToast('Gagal menyimpan resep: ' + errMsg(e)); }
 }
 async function saveSales(){
-  try{ await window.storage.set(SALES_KEY, JSON.stringify(sales), true); }
-  catch(e){ showToast('Gagal menyimpan data penjualan.'); }
+  try{ await storageSet(SALES_KEY, JSON.stringify(sales)); }
+  catch(e){ showToast('Gagal menyimpan data penjualan: ' + errMsg(e)); }
 }
 
 function showToast(msg){
@@ -631,6 +702,7 @@ document.getElementById('btn-save').addEventListener('click', async ()=>{
   const price = parseFloat(document.getElementById('f-price').value);
   const category = document.getElementById('f-category').value;
   const supplier = document.getElementById('f-supplier').value.trim();
+  const payment = document.getElementById('f-payment').value;
   const notes = document.getElementById('f-notes').value.trim();
 
   if(!date || !item || !qty || qty <= 0 || isNaN(price) || price < 0){
@@ -640,7 +712,7 @@ document.getElementById('btn-save').addEventListener('click', async ()=>{
 
   const entry = {
     id: uid(), date, item, category, qty, unit, price,
-    total: qty * price, supplier, notes,
+    total: qty * price, supplier, payment, notes,
     createdAt: new Date().toISOString()
   };
   purchases.push(entry);
@@ -653,6 +725,7 @@ document.getElementById('btn-save').addEventListener('click', async ()=>{
   document.getElementById('f-price').value = '';
   document.getElementById('f-category').value = '';
   document.getElementById('f-supplier').value = '';
+  document.getElementById('f-payment').value = '';
   document.getElementById('f-notes').value = '';
   updateTotalPreview();
 });
@@ -661,9 +734,11 @@ document.getElementById('btn-save').addEventListener('click', async ()=>{
 document.getElementById('riwayat-month').value = currentMonthStr();
 document.getElementById('riwayat-month').addEventListener('change', renderRiwayat);
 document.getElementById('riwayat-category').addEventListener('change', renderRiwayat);
+document.getElementById('riwayat-payment').addEventListener('change', renderRiwayat);
 document.getElementById('btn-clear-filter').addEventListener('click', ()=>{
   document.getElementById('riwayat-month').value = '';
   document.getElementById('riwayat-category').value = '';
+  document.getElementById('riwayat-payment').value = '';
   renderRiwayat();
 });
 document.getElementById('btn-export').addEventListener('click', exportCSV);
@@ -671,9 +746,11 @@ document.getElementById('btn-export').addEventListener('click', exportCSV);
 function renderRiwayat(){
   const monthFilter = document.getElementById('riwayat-month').value;
   const catFilter = document.getElementById('riwayat-category').value;
+  const paymentFilter = document.getElementById('riwayat-payment').value;
   let list = [...purchases].sort((a,b)=> b.date.localeCompare(a.date));
   if(monthFilter) list = list.filter(p => p.date.slice(0,7) === monthFilter);
   if(catFilter) list = list.filter(p => p.category === catFilter);
+  if(paymentFilter) list = list.filter(p => p.payment === paymentFilter);
 
   const wrap = document.getElementById('riwayat-table-wrap');
   if(list.length === 0){
@@ -689,13 +766,14 @@ function renderRiwayat(){
       <td>${fmtRupiah(p.price)}</td>
       <td>${fmtRupiah(p.total)}</td>
       <td>${escapeHtml(p.supplier || '—')}</td>
+      <td>${p.payment ? '<span class="chip">'+escapeHtml(p.payment)+'</span>' : '—'}</td>
       <td><button class="del-btn" data-id="${p.id}">Hapus</button></td>
     </tr>
   `).join('');
   wrap.innerHTML = `
     <table>
       <thead>
-        <tr><th>Tanggal</th><th>Bahan</th><th>Kategori</th><th>Jumlah</th><th>Harga satuan</th><th>Total</th><th>Supplier</th><th></th></tr>
+        <tr><th>Tanggal</th><th>Bahan</th><th>Kategori</th><th>Jumlah</th><th>Harga satuan</th><th>Total</th><th>Supplier</th><th>Pembayaran</th><th></th></tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>
@@ -713,12 +791,14 @@ function renderRiwayat(){
 function exportCSV(){
   const monthFilter = document.getElementById('riwayat-month').value;
   const catFilter = document.getElementById('riwayat-category').value;
+  const paymentFilter = document.getElementById('riwayat-payment').value;
   let list = [...purchases].sort((a,b)=> a.date.localeCompare(b.date));
   if(monthFilter) list = list.filter(p => p.date.slice(0,7) === monthFilter);
   if(catFilter) list = list.filter(p => p.category === catFilter);
+  if(paymentFilter) list = list.filter(p => p.payment === paymentFilter);
   if(list.length === 0){ showToast('Tidak ada data untuk diunduh.'); return; }
-  const header = ['Tanggal','Bahan','Kategori','Jumlah','Satuan','Harga Satuan','Total','Supplier','Catatan'];
-  const rows = list.map(p => [p.date, p.item, p.category, p.qty, p.unit, p.price, p.total, p.supplier, p.notes]
+  const header = ['Tanggal','Bahan','Kategori','Jumlah','Satuan','Harga Satuan','Total','Supplier','Metode Pembayaran','Catatan'];
+  const rows = list.map(p => [p.date, p.item, p.category, p.qty, p.unit, p.price, p.total, p.supplier, p.payment, p.notes]
     .map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(','));
   const csv = [header.join(','), ...rows].join('\n');
   const blob = new Blob(["\uFEFF" + csv], {type:'text/csv;charset=utf-8;'});
@@ -1234,6 +1314,20 @@ function renderMovements(){
   renderStock();
   renderMovements();
   renderRingkasan();
+  const note = document.getElementById('storage-mode-note');
+  if(note){
+    if(storageMode === 'cloud'){
+      note.textContent = '☁️ Data tersimpan otomatis dan sinkron untuk semua yang membuka link ini.';
+      note.style.color = 'var(--green-dark)';
+    } else if(storageMode === 'local'){
+      note.textContent = '💾 Mode file lokal: data tersimpan di browser/komputer ini saja, tidak sinkron ke perangkat lain.';
+      note.style.color = 'var(--green-dark)';
+    } else {
+      note.textContent = '⚠️ Browser ini memblokir penyimpanan — data TIDAK tersimpan permanen. Coba buka di browser biasa (bukan in-app browser WhatsApp/Instagram) atau matikan mode privat/incognito.';
+      note.style.color = 'var(--rust-dark)';
+    }
+  }
+  setTimeout(showStandaloneNotice, 600);
 })();
 </script>
 </body>
