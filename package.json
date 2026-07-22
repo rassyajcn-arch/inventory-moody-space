@@ -1,8 +1,9 @@
 {
-  "name": "inventory-moody-space",
+  "name": "moody-space-inventory",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "@netlify/blobs": "^7.0.0"
+    "@netlify/blobs": "^8"
   }
 }

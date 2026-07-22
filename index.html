@@ -230,6 +230,11 @@
 
   svg.trend text{ font-family: 'IBM Plex Mono', monospace; }
 
+  .rec-pos{ color: var(--rust-dark); font-weight:700; }
+  .rec-neg{ color: var(--green-dark); font-weight:700; }
+  #rekon-table-wrap .li-meta{ color: var(--muted); font-size: 11px; margin-top: 2px; font-family:'IBM Plex Mono', monospace; }
+  .lap-sec{ font-family:'Silkscreen',monospace; font-size:15px; color:var(--green-dark); margin:26px 0 12px; }
+
   .ingredient-row{
     display:grid; grid-template-columns: 1.6fr 0.8fr 0.8fr auto; gap: 10px; align-items:end;
     margin-bottom: 10px;
@@ -407,17 +412,7 @@
         </div>
       </div>
 
-      <div class="nav-group" data-group="ringkasan">
-        <button class="nav-group-toggle" data-group-toggle="ringkasan">📊 Ringkasan Bulanan <span class="chev">▶</span></button>
-        <div class="nav-children">
-          <button class="nav-item" data-view="ringkasan-total">Total Belanja</button>
-          <button class="nav-item" data-view="ringkasan-spend">Spend per Bahan</button>
-          <button class="nav-item" data-view="ringkasan-penjualan">Penjualan</button>
-          <button class="nav-item" data-view="ringkasan-pemakaian">Pemakaian Bahan</button>
-          <button class="nav-item" data-view="ringkasan-sisa">Sisa Stok</button>
-          <button class="nav-item" data-view="ringkasan-insight">Insight</button>
-        </div>
-      </div>
+      <button class="nav-item" data-view="laporan">📊 Laporan</button>
     </div>
 
     <div class="sidebar-storage-note" id="storage-mode-note"></div>
@@ -444,7 +439,7 @@
         <button data-view="pembelian-input">+ Input Pembelian</button>
         <button data-view="penjualan-input">+ Input Penjualan</button>
         <button data-view="stok-daftar">📦 Lihat Stok</button>
-        <button data-view="ringkasan-total">📊 Ringkasan Bulan Ini</button>
+        <button data-view="laporan">📊 Laporan</button>
       </div>
       <div class="card">
         <h2>Aktivitas terbaru</h2>
@@ -590,7 +585,9 @@
 
     <div class="card">
       <h2>Daftar resep produk</h2>
-      <div class="hint">Klik "Edit" untuk mengubah komposisi bahan sebuah produk.</div>
+      <div class="hint">Klik "Edit" untuk mengubah komposisi bahan sebuah produk, atau "Hapus" bila menunya sudah tidak ada.</div>
+      <button class="secondary" id="btn-import-menu" style="margin-bottom:14px;">📥 Muat resep menu Moody Space</button>
+      <div class="hint" style="margin-top:-6px;">Menambahkan resep menu 2025 dari daftar bawaan. Produk yang namanya sudah ada akan dilewati, jadi aman diklik berulang.</div>
       <div id="recipe-list-wrap"></div>
     </div>
   </section>
@@ -724,59 +721,78 @@
   </section>
 
   <!-- RINGKASAN: TOTAL BELANJA -->
-  <section class="view-panel" id="view-ringkasan-total">
+  <!-- LAPORAN (gabungan ringkasan + rekonsiliasi + unduh) -->
+  <section class="view-panel" id="view-laporan">
+
+    <div class="card" style="background:var(--cream-soft);">
+      <h2>Unduh data</h2>
+      <div class="hint">Ambil salinan data bulan ini untuk arsip, pembukuan, atau dibagikan ke tim. Format CSV, bisa dibuka di Excel / Google Sheets.</div>
+      <div class="toolbar-actions">
+        <button class="secondary" id="btn-dl-rekon">⬇ Unduh Rekonsiliasi (CSV)</button>
+        <button class="secondary" id="btn-dl-trx">⬇ Unduh Transaksi Bulan Ini (CSV)</button>
+      </div>
+    </div>
+
+    <h2 class="lap-sec">⚖️ Beli vs Terpakai</h2>
+    <div class="stat-row" id="rekon-stats"></div>
+    <div class="card">
+      <div class="hint" id="rekon-caption" style="margin-bottom:16px;">Membandingkan bahan yang kamu beli dengan bahan yang benar-benar terpakai karena produk terjual.</div>
+      <div id="rekon-table-wrap"></div>
+    </div>
+
+    <h2 class="lap-sec">💰 Belanja & Tren</h2>
     <div class="stat-row" id="summary-stats"></div>
     <div class="card">
-      <h2>Tren belanja bulanan</h2>
-      <div class="hint">Total pengeluaran per bulan, untuk melihat naik-turunnya belanja dari waktu ke waktu.</div>
+      <h2>Tren belanja 6 bulan</h2>
+      <div class="hint">Naik-turun total belanja dari waktu ke waktu.</div>
       <div id="trend-chart-wrap"></div>
     </div>
-  </section>
-
-  <!-- RINGKASAN: SPEND PER BAHAN -->
-  <section class="view-panel" id="view-ringkasan-spend">
     <div class="card">
+      <h2>Belanja per bahan</h2>
+      <div class="hint">Ke mana uang belanja paling banyak mengalir bulan ini.</div>
       <div class="ledger" id="ledger-output"></div>
     </div>
-  </section>
 
-  <!-- RINGKASAN: PENJUALAN -->
-  <section class="view-panel" id="view-ringkasan-penjualan">
+    <h2 class="lap-sec">☕ Penjualan & Pemakaian</h2>
     <div class="stat-row" id="ringkasan-penjualan-stats"></div>
     <div class="card">
-      <h2>Produk terjual bulan ini</h2>
-      <div class="hint">Diurutkan dari jumlah terjual terbanyak.</div>
+      <h2>Produk terjual</h2>
+      <div class="hint">Diurutkan dari yang paling laris.</div>
       <div id="ringkasan-penjualan-wrap"></div>
     </div>
-  </section>
-
-  <!-- RINGKASAN: PEMAKAIAN BAHAN -->
-  <section class="view-panel" id="view-ringkasan-pemakaian">
     <div class="card">
-      <h2>Pemakaian bahan bulan ini</h2>
-      <div class="hint">Gabungan pemakaian dari penjualan otomatis + pemakaian manual (rusak/tumpah/dsb), tidak termasuk koreksi tambah.</div>
+      <h2>Pemakaian bahan</h2>
+      <div class="hint">Gabungan pemakaian dari penjualan otomatis + pemakaian manual (rusak/tumpah/dsb).</div>
       <div id="ringkasan-pemakaian-wrap"></div>
     </div>
-  </section>
 
-  <!-- RINGKASAN: SISA STOK -->
-  <section class="view-panel" id="view-ringkasan-sisa">
+    <h2 class="lap-sec">📦 Stok & Catatan</h2>
     <div class="card">
-      <h2>Sisa stok per akhir bulan terpilih</h2>
-      <div class="hint">Dihitung dari semua pembelian &amp; penyesuaian sampai dengan tanggal terakhir bulan yang dipilih.</div>
+      <h2>Sisa stok akhir bulan</h2>
+      <div class="hint">Perkiraan sisa stok sampai akhir bulan terpilih.</div>
       <div id="ringkasan-sisa-wrap"></div>
     </div>
-  </section>
-
-  <!-- RINGKASAN: INSIGHT -->
-  <section class="view-panel" id="view-ringkasan-insight">
     <div class="card">
-      <h2>Insight otomatis</h2>
-      <div class="hint">Beberapa catatan otomatis berdasarkan data bulan ini dibanding bulan lalu.</div>
+      <h2>Catatan otomatis</h2>
+      <div class="hint">Sorotan singkat dari data bulan ini dibanding bulan lalu.</div>
       <div class="insight-list" id="ringkasan-insight-wrap"></div>
     </div>
-  </section>
 
+    <div class="card">
+      <h2>Cara membaca rekonsiliasi</h2>
+      <div class="hint" style="margin-bottom:0;">
+        <p style="margin:0 0 8px;"><span class="badge badge-in">Seimbang</span> beli ≈ terpakai. Pola belanja sudah pas dengan penjualan.</p>
+        <p style="margin:0 0 8px;"><span class="badge badge-out">Numpuk</span> beli jauh lebih banyak dari yang terpakai — jadi tambahan stok, kelebihan beli, atau kemungkinan waste.</p>
+        <p style="margin:0 0 8px;"><span class="badge badge-sale">Pakai stok</span> terpakai lebih banyak dari yang dibeli bulan ini — kamu memakai stok lama.</p>
+        <p style="margin:0 0 14px;"><span class="badge" style="background:#eef2ec;color:var(--muted);">⚠ Cek satuan</span> satuan di resep beda jenis dari satuan beli, jadi belum bisa dibandingkan langsung.</p>
+        <p style="margin:0 0 6px; font-weight:700; color:var(--green-dark);">Supaya akurat:</p>
+        <p style="margin:0 0 6px;">• Angka "terpakai" dihitung dari <b>penjualan × resep</b> — pastikan resep tiap produk terisi dan porsinya konsisten.</p>
+        <p style="margin:0 0 6px;">• Untuk mengukur waste sebenarnya, lakukan <b>stok opname</b> berkala lalu catat selisihnya lewat Input Stok Awal / koreksi manual.</p>
+        <p style="margin:0;">• Nilai rupiah memakai harga rata-rata pembelian tiap bahan.</p>
+      </div>
+    </div>
+
+  </section>
   </main>
 </div>
 
@@ -791,6 +807,7 @@ const STORAGE_KEY = 'moody-space-purchases';
 const ADJ_KEY = 'moody-space-stock-adjustments';
 const RECIPE_KEY = 'moody-space-recipes';
 const SALES_KEY = 'moody-space-sales';
+const SEED_FLAG_KEY = 'moody-space-recipes-seeded';
 let purchases = [];
 let adjustments = [];
 let recipes = [];
@@ -924,6 +941,64 @@ async function saveSales(){
   catch(e){ showToast('Gagal menyimpan data penjualan: ' + errMsg(e)); }
 }
 
+// ---------- Resep menu bawaan (dari PDF menu Moody Space 2025) ----------
+const SEED_RECIPES = [
+  {product:'Americano', ingredients:[['Air',100,'ml'],['Es',110,'gram'],['Espresso',40,'ml']]},
+  {product:'Perfect Storm', ingredients:[['Madu',15,'ml'],['Jungle Juice Orange',60,'ml'],['Nipis Madu',100,'ml'],['Es',110,'gram'],['Espresso',30,'ml'],['Dried Lemon',1,'pcs']]},
+  {product:'Moody Lifter', ingredients:[['Espresso',30,'ml'],['Simple Syrup',12,'ml'],['Creamer',40,'ml'],['Susu Evaporasi',30,'ml'],['UHT',60,'ml'],['Es',110,'gram']]},
+  {product:'Latte', ingredients:[['Simple Syrup',14,'ml'],['UHT',100,'ml'],['Es',110,'gram'],['Espresso',30,'ml']]},
+  {product:'Kopi Keju', ingredients:[['Espresso',30,'ml'],['Simple Syrup',12,'ml'],['Creamer',40,'ml'],['Susu Evaporasi',30,'ml'],['UHT',60,'ml'],['Es',110,'gram'],['Cheese Foam',27,'gram']]},
+  {product:'Cloud Tiramisu', ingredients:[['Tiramisu Syrup',13,'ml'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es',110,'gram'],['Cream',20,'ml'],['Espresso',30,'ml']]},
+  {product:'Butterscotch Sea Salt Latte', ingredients:[['Butterscotch Syrup',13,'ml'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es',110,'gram'],['Sea Salt Foam',20,'ml'],['Espresso',30,'ml']]},
+  {product:'Salted Caramel Latte', ingredients:[['Salted Caramel Syrup',13,'ml'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es',110,'gram'],['Espresso',30,'ml']]},
+  {product:'Strawberry Milk', ingredients:[['Strawberry Syrup',20,'ml'],['UHT',70,'ml'],['Creamer',20,'ml'],['Selai Strawberry',1,'sdt'],['Es',110,'gram']]},
+  {product:'Choco Cheese', ingredients:[['Chocolate Powder',30,'gram'],['Simple Syrup',10,'ml'],['Creamer',40,'ml'],['UHT',80,'ml'],['Es',110,'gram'],['Cheese Foam',25,'gram']]},
+  {product:'Choco Berry', ingredients:[['Chocolate Powder',30,'gram'],['Strawberry Syrup',15,'ml'],['Creamer',40,'ml'],['UHT',80,'ml'],['Es',110,'gram']]},
+  {product:'Chocolate', ingredients:[['Chocolate Powder',20,'gram'],['Simple Syrup',10,'gram'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es Batu',90,'gram']]},
+  {product:'Red Velvet', ingredients:[['Red Velvet Powder',20,'gram'],['Simple Syrup',12,'ml'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es Batu',90,'gram']]},
+  {product:'Red Velvet Cheese', ingredients:[['Red Velvet Powder',20,'gram'],['Simple Syrup',12,'ml'],['Creamer',50,'ml'],['UHT',80,'ml'],['Es Batu',90,'gram'],['Cheese Foam',27,'gram']]},
+  {product:'Tiramisu Regal', ingredients:[['Regal Crumb',2,'sdt'],['Tiramisu Syrup',13,'ml'],['UHT',80,'ml'],['Creamer',40,'ml'],['Es',110,'gram'],['Regal Biscuit',1,'pcs']]},
+  {product:'Lemon Tea', ingredients:[['Lemon Syrup',8,'ml'],['Simple Syrup',25,'ml'],['Tea',150,'ml'],['Es',110,'gram'],['Lemon',1,'pcs']]},
+  {product:'Lychee Tea', ingredients:[['Lychee Syrup',20,'ml'],['Tea',150,'ml'],['Es',110,'gram'],['Lychee',1,'pcs']]},
+  {product:'Peach Tea', ingredients:[['Peach Syrup',20,'ml'],['Tea',150,'ml'],['Es',110,'gram'],['Peach',1,'pcs']]},
+  {product:'Strawberry Tea', ingredients:[['Strawberry Syrup',20,'ml'],['Tea',150,'ml'],['Es',110,'gram'],['Peach',1,'pcs']]},
+  {product:'Tea', ingredients:[['Simple Syrup',25,'ml'],['Tea',150,'ml'],['Es',110,'gram']]},
+  {product:'Peach Yakult', ingredients:[['Peach Syrup',20,'ml'],['Air',60,'ml'],['Yakult',1,'pcs'],['Es',110,'gram'],['Peach',1,'pcs']]},
+  {product:'Lychee Yakult', ingredients:[['Lychee Syrup',20,'ml'],['Air',60,'ml'],['Yakult',1,'pcs'],['Es',110,'gram'],['Lychee',1,'pcs']]},
+  {product:'Thai Tea', ingredients:[['Thai Tea',150,'ml'],['Creamer Bubuk',2,'sdm'],['SKM',25,'gram'],['Susu Evaporasi',15,'ml'],['Es',110,'gram']]},
+  {product:'French Fries', ingredients:[['French Fries',160,'gram']]},
+  {product:'Sistagor', ingredients:[['French Fries',160,'gram'],['Sosis',3,'pcs']]},
+  {product:'Dimsum', ingredients:[['Dimsum',5,'pcs']]},
+  {product:'Wonton Chili Oil', ingredients:[['Wonton',5,'pcs']]},
+  {product:'Singkong Keju', ingredients:[['Singkong Frozen',0.5,'pack']]},
+  {product:'Piscok', ingredients:[['Piscok',5,'pcs']]},
+  {product:'Cireng Rujak', ingredients:[['Cireng',10,'pcs']]},
+  {product:'Tahu Cabai Garam', ingredients:[['Tahu',3,'pcs']]},
+  {product:'Nasi Goreng Daun Jeruk', ingredients:[['Nasi',1,'porsi'],['Bumbu Dasar',1,'sdm'],['Baso',1,'pcs'],['Daun Jeruk',6,'pcs'],['Margarin',1,'sdm'],['Telur',1,'pcs'],['Timun',3,'pcs']]},
+  {product:'Kari Magelangan', ingredients:[['Mie Kari',1,'pcs'],['Telur',1,'pcs'],['Bumbu Dasar',1,'sdm'],['Nasi',1,'porsi'],['Bubuk Kari',0.5,'sdt'],['Kecap',0.5,'sdm'],['Timun',3,'pcs']]},
+  {product:'Garlic Butter Chicken', ingredients:[['Ayam',80,'gram'],['Margarin',1,'sdm'],['Bawang Putih',1,'sdt'],['Cabai Keriting',2,'pcs'],['Parsley',1,'sdt'],['Nasi',1,'porsi'],['Timun',3,'pcs']]},
+  {product:'Mie Chili Oil', ingredients:[['Mie Ayam Panggang',1,'pcs'],['Chili Oil',3,'sdm'],['Wonton',1,'pcs']]},
+  {product:'Taichan', ingredients:[['Ayam Fillet',10,'pcs'],['Jeruk Limo',1,'pcs']]}
+];
+
+async function importSeedRecipes(silent){
+  let added=0, skipped=0;
+  SEED_RECIPES.forEach(seed=>{
+    const exists = recipes.some(r=> (r.product||'').trim().toLowerCase() === seed.product.trim().toLowerCase());
+    if(exists){ skipped++; return; }
+    recipes.push({ id: uid(), product: seed.product, ingredients: seed.ingredients.map(i=>({item:i[0], qty:i[1], unit:i[2]})) });
+    added++;
+  });
+  if(added>0) await saveRecipes();
+  if(!silent){
+    refreshItemSuggestions();
+    populateProductSelect();
+    renderRecipeList();
+    showToast(added + ' resep ditambahkan' + (skipped ? ', ' + skipped + ' sudah ada (dilewati)' : '') + '.');
+  }
+  return added;
+}
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -949,12 +1024,7 @@ const VIEW_META = {
   'penjualan-riwayat': {title:'Riwayat Penjualan', sub:'Semua transaksi penjualan yang tercatat.', group:'penjualan'},
   'stok-daftar': {title:'Daftar Stok', sub:'Stok bahan saat ini dan riwayat pergerakannya.', group:'stok'},
   'stok-awal': {title:'Input Stok Awal', sub:'Atur stok fisik awal/koreksi besar untuk bahan tertentu.', group:'stok'},
-  'ringkasan-total': {title:'Total Belanja', sub:'Total pengeluaran bulan ini dan trennya.', group:'ringkasan'},
-  'ringkasan-spend': {title:'Spend per Bahan', sub:'Rincian belanja per bahan di bulan terpilih.', group:'ringkasan'},
-  'ringkasan-penjualan': {title:'Penjualan', sub:'Rekap produk terjual di bulan terpilih.', group:'ringkasan'},
-  'ringkasan-pemakaian': {title:'Pemakaian Bahan', sub:'Total bahan terpakai di bulan terpilih.', group:'ringkasan'},
-  'ringkasan-sisa': {title:'Sisa Stok', sub:'Perkiraan sisa stok per akhir bulan terpilih.', group:'ringkasan'},
-  'ringkasan-insight': {title:'Insight', sub:'Catatan otomatis dari data bulan ini.', group:'ringkasan'}
+  'laporan': {title:'📊 Laporan', sub:'Rekonsiliasi beli vs terjual, ringkasan bulanan, dan unduh data.', group:null}
 };
 let currentView = 'dashboard';
 
@@ -975,7 +1045,7 @@ function switchView(view){
     g.classList.toggle('open', g.dataset.group === meta.group);
   });
 
-  document.getElementById('ringkasan-toolbar').style.display = view.startsWith('ringkasan-') ? 'block' : 'none';
+  document.getElementById('ringkasan-toolbar').style.display = (view === 'laporan') ? 'block' : 'none';
 
   if(view === 'dashboard') renderDashboard();
   if(view === 'pembelian-riwayat') renderRiwayat();
@@ -984,12 +1054,7 @@ function switchView(view){
   if(view === 'penjualan-riwayat') renderSales();
   if(view === 'stok-daftar'){ renderStock(); renderMovements(); }
   if(view === 'stok-awal') updateOpeningPreview();
-  if(view === 'ringkasan-total') renderRingkasanTotal();
-  if(view === 'ringkasan-spend') renderRingkasanSpend();
-  if(view === 'ringkasan-penjualan') renderRingkasanPenjualan();
-  if(view === 'ringkasan-pemakaian') renderRingkasanPemakaian();
-  if(view === 'ringkasan-sisa') renderRingkasanSisa();
-  if(view === 'ringkasan-insight') renderRingkasanInsight();
+  if(view === 'laporan') renderLaporan();
 
   closeSidebar();
   window.scrollTo({top:0, behavior:'instant'});
@@ -1020,12 +1085,7 @@ document.getElementById('mobile-menu-btn').addEventListener('click', openSidebar
 document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
 
 document.getElementById('ringkasan-month').addEventListener('change', ()=>{
-  if(currentView === 'ringkasan-total') renderRingkasanTotal();
-  else if(currentView === 'ringkasan-spend') renderRingkasanSpend();
-  else if(currentView === 'ringkasan-penjualan') renderRingkasanPenjualan();
-  else if(currentView === 'ringkasan-pemakaian') renderRingkasanPemakaian();
-  else if(currentView === 'ringkasan-sisa') renderRingkasanSisa();
-  else if(currentView === 'ringkasan-insight') renderRingkasanInsight();
+  if(currentView === 'laporan') renderLaporan();
 });
 
 // ---------- Input form (pembelian) ----------
@@ -1087,6 +1147,8 @@ document.getElementById('btn-clear-filter').addEventListener('click', ()=>{
   renderRiwayat();
 });
 document.getElementById('btn-export').addEventListener('click', exportCSV);
+document.getElementById('btn-dl-rekon').addEventListener('click', exportRekonsiliasi);
+document.getElementById('btn-dl-trx').addEventListener('click', exportTransaksi);
 
 function renderRiwayat(){
   const monthFilter = document.getElementById('riwayat-month').value;
@@ -1524,6 +1586,176 @@ function renderRingkasanSisa(){
   `;
 }
 
+// ---------- Rekonsiliasi & Laporan ----------
+function rkToBase(qty, unit){
+  const u = (unit||'').toString().trim().toLowerCase();
+  if(u==='kg') return {q: qty*1000, fam:'massa'};
+  if(u==='gram'||u==='g') return {q: qty, fam:'massa'};
+  if(u==='liter'||u==='l') return {q: qty*1000, fam:'volume'};
+  if(u==='ml') return {q: qty, fam:'volume'};
+  return {q: qty, fam:'satuan:'+u};
+}
+function rkFromBase(qtyBase, unit){
+  const u = (unit||'').toString().trim().toLowerCase();
+  if(u==='kg' || u==='liter' || u==='l') return qtyBase/1000;
+  return qtyBase;
+}
+function rkFam(unit){ return rkToBase(1, unit).fam; }
+
+function computeRekon(month){
+  const cost = {};
+  purchases.forEach(p=>{
+    const k = p.item.trim().toLowerCase();
+    if(!cost[k]) cost[k] = { rp:0, base:0 };
+    cost[k].rp += p.total;
+    cost[k].base += rkToBase(p.qty, p.unit).q;
+  });
+  const costPerBase = key => (cost[key] && cost[key].base>0) ? cost[key].rp/cost[key].base : 0;
+
+  const rows = {};
+  const ensure = (key, item, unit) => {
+    if(!rows[key]) rows[key] = { item, unit, fam: rkFam(unit), boughtBase:0, boughtRp:0, usedSaleBase:0, usedManualBase:0, mismatch:false, hasUnit:false };
+    return rows[key];
+  };
+  purchases.filter(p=>p.date.slice(0,7)===month).forEach(p=>{
+    const k = p.item.trim().toLowerCase();
+    const r = ensure(k, p.item.trim(), p.unit);
+    r.unit = p.unit; r.fam = rkFam(p.unit); r.hasUnit = true;
+    r.boughtBase += rkToBase(p.qty, p.unit).q;
+    r.boughtRp += p.total;
+  });
+  adjustments.filter(a=>a.date.slice(0,7)===month && a.delta<0).forEach(a=>{
+    const k = a.item.trim().toLowerCase();
+    const r = ensure(k, a.item.trim(), a.unit);
+    const c = rkToBase(Math.abs(a.delta), a.unit);
+    if(r.hasUnit && r.fam !== c.fam) r.mismatch = true;
+    else if(!r.hasUnit){ r.unit = a.unit; r.fam = c.fam; }
+    if(a.reason==='terjual') r.usedSaleBase += c.q;
+    else r.usedManualBase += c.q;
+  });
+
+  const list = Object.entries(rows).map(([key,r])=>{
+    const cpb = costPerBase(key);
+    const usedSaleRp = r.mismatch ? null : r.usedSaleBase * cpb;
+    const selisihBase = r.boughtBase - r.usedSaleBase;
+    const selisihRp = usedSaleRp==null ? null : r.boughtRp - usedSaleRp;
+    let status;
+    if(r.mismatch) status = 'Cek satuan';
+    else if(r.boughtBase===0 && r.usedSaleBase>0) status = 'Pakai stok';
+    else if(r.usedSaleBase===0 && r.boughtBase>0) status = 'Numpuk';
+    else { const ratio = r.boughtBase>0 ? r.usedSaleBase/r.boughtBase : 0; status = (ratio>=0.8 && ratio<=1.25) ? 'Seimbang' : (ratio<0.8 ? 'Numpuk' : 'Pakai stok'); }
+    return { key, ...r, cpb, usedSaleRp, selisihBase, selisihRp, status };
+  }).sort((a,b)=> b.boughtRp - a.boughtRp);
+
+  let totalBelanja=0, totalCOGS=0;
+  list.forEach(r=>{ totalBelanja += r.boughtRp; if(r.usedSaleRp!=null) totalCOGS += r.usedSaleRp; });
+  return { list, totalBelanja, totalCOGS, serap: totalBelanja>0 ? (totalCOGS/totalBelanja*100) : 0, selisihRp: totalBelanja-totalCOGS };
+}
+
+function renderRekonsiliasi(){
+  const month = document.getElementById('ringkasan-month').value || currentMonthStr();
+  const data = computeRekon(month);
+
+  document.getElementById('rekon-stats').innerHTML = `
+    <div class="stat"><div class="label">Belanja bahan (${monthLabelOf(month)})</div><div class="value">${fmtRupiah(data.totalBelanja)}</div></div>
+    <div class="stat"><div class="label">Terpakai dari penjualan</div><div class="value">${fmtRupiah(data.totalCOGS)}</div></div>
+    <div class="stat"><div class="label">Selisih belum terserap</div><div class="value">${fmtRupiah(data.selisihRp)}</div></div>
+  `;
+
+  const caption = document.getElementById('rekon-caption');
+  if(data.totalBelanja===0 && data.totalCOGS===0){
+    caption.textContent = 'Belum ada belanja atau penjualan di bulan ini untuk dibandingkan.';
+  } else {
+    caption.innerHTML = `Sekitar <b>${data.serap.toFixed(0)}%</b> nilai belanja bahan bulan ini sudah "kembali" sebagai bahan yang terpakai karena produk terjual. Sisanya (${fmtRupiah(data.selisihRp)}) jadi tambahan stok, kelebihan beli, atau waste.`;
+  }
+
+  const wrap = document.getElementById('rekon-table-wrap');
+  if(data.list.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada data belanja/pemakaian di bulan ini.</div>';
+    return;
+  }
+  const BADGE = { 'Seimbang':'badge-in', 'Numpuk':'badge-out', 'Pakai stok':'badge-sale' };
+  const rowsHtml = data.list.map(r=>{
+    let usedCell, selCell, status;
+    if(r.mismatch){
+      status = '<span class="badge" style="background:#eef2ec;color:var(--muted);">⚠ Cek satuan</span>';
+      usedCell = '<span style="color:var(--muted);">—</span>';
+      selCell = '<span style="color:var(--muted);">—</span>';
+    } else {
+      const usedDisp = rkFromBase(r.usedSaleBase, r.unit);
+      const selDisp = rkFromBase(r.selisihBase, r.unit);
+      usedCell = `${fmtNum(usedDisp)} ${escapeHtml(r.unit)}` + (r.usedSaleRp>0 ? `<div class="li-meta">${fmtRupiah(r.usedSaleRp)}</div>` : '');
+      const selCls = r.selisihBase > 0 ? 'rec-pos' : (r.selisihBase < 0 ? 'rec-neg' : '');
+      const selSign = r.selisihBase > 0 ? '+' : '';
+      selCell = `<span class="${selCls}">${selSign}${fmtNum(selDisp)} ${escapeHtml(r.unit)}</span>` + (r.selisihRp!=null ? `<div class="li-meta">${(r.selisihRp>=0?'+':'')}${fmtRupiah(r.selisihRp)}</div>` : '');
+      status = `<span class="badge ${BADGE[r.status]||''}">${r.status}</span>`;
+    }
+    const boughtDisp = rkFromBase(r.boughtBase, r.unit);
+    const manualMeta = (!r.mismatch && r.usedManualBase>0) ? `<div class="li-meta">+ waste/pemakaian manual: ${fmtNum(rkFromBase(r.usedManualBase, r.unit))} ${escapeHtml(r.unit)}</div>` : '';
+    return `<tr>
+      <td class="name-col">${escapeHtml(r.item)}${manualMeta}</td>
+      <td>${fmtNum(boughtDisp)} ${escapeHtml(r.unit)}<div class="li-meta">${fmtRupiah(r.boughtRp)}</div></td>
+      <td>${usedCell}</td>
+      <td>${selCell}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="table-scroll"><table>
+      <thead><tr><th>Bahan</th><th>Dibeli</th><th>Terpakai (terjual)</th><th>Selisih</th><th>Status</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table></div>
+  `;
+}
+
+function renderLaporan(){
+  renderRekonsiliasi();
+  renderRingkasanTotal();
+  renderRingkasanSpend();
+  renderRingkasanPenjualan();
+  renderRingkasanPemakaian();
+  renderRingkasanSisa();
+  renderRingkasanInsight();
+}
+
+function downloadCSV(filename, header, rows){
+  const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const csv = [header.map(esc).join(','), ...rows.map(r=>r.map(esc).join(','))].join('\n');
+  const blob = new Blob(["\uFEFF" + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportRekonsiliasi(){
+  const month = document.getElementById('ringkasan-month').value || currentMonthStr();
+  const data = computeRekon(month);
+  if(!data.list.length){ showToast('Tidak ada data untuk diunduh.'); return; }
+  const header = ['Bahan','Dibeli (jumlah)','Satuan','Dibeli (Rp)','Terpakai dari penjualan','Terpakai (Rp)','Selisih','Selisih (Rp)','Waste/pemakaian manual','Status'];
+  const rows = data.list.map(r=>{
+    const bought = rkFromBase(r.boughtBase, r.unit);
+    const used = r.mismatch ? '' : rkFromBase(r.usedSaleBase, r.unit);
+    const sel = r.mismatch ? '' : rkFromBase(r.selisihBase, r.unit);
+    const waste = (!r.mismatch && r.usedManualBase>0) ? rkFromBase(r.usedManualBase, r.unit) : '';
+    return [r.item, bought, r.unit, Math.round(r.boughtRp), used, r.usedSaleRp==null?'':Math.round(r.usedSaleRp), sel, r.selisihRp==null?'':Math.round(r.selisihRp), waste, r.status];
+  });
+  downloadCSV('rekonsiliasi-moody-' + month + '.csv', header, rows);
+  showToast('Rekonsiliasi ' + month + ' diunduh.');
+}
+
+function exportTransaksi(){
+  const month = document.getElementById('ringkasan-month').value || currentMonthStr();
+  const rows = [];
+  purchases.filter(p=>p.date.slice(0,7)===month).forEach(p=> rows.push([p.date,'Belanja',p.item,p.qty,p.unit,Math.round(p.total),p.notes||'']));
+  sales.filter(s=>s.date.slice(0,7)===month).forEach(s=> rows.push([s.date,'Penjualan',s.product,s.qty,'porsi','',s.notes||'']));
+  adjustments.filter(a=>a.date.slice(0,7)===month && a.reason!=='terjual').forEach(a=> rows.push([a.date, a.delta<0?'Pemakaian':'Koreksi', a.item, Math.abs(a.delta), a.unit, '', a.notes||'']));
+  if(!rows.length){ showToast('Tidak ada transaksi untuk diunduh.'); return; }
+  rows.sort((x,y)=> String(x[0]).localeCompare(String(y[0])));
+  downloadCSV('transaksi-moody-' + month + '.csv', ['Tanggal','Jenis','Item/Produk','Jumlah','Satuan','Nilai (Rp)','Catatan'], rows);
+  showToast('Transaksi ' + month + ' diunduh.');
+}
+
 function renderRingkasanInsight(){
   const month = document.getElementById('ringkasan-month').value || currentMonthStr();
   const prevMonth = prevMonthStr(month);
@@ -1601,6 +1833,9 @@ function ingredientRowTemplate(ing){
           <option value="pack">pack</option>
           <option value="botol">botol</option>
           <option value="karton">karton</option>
+          <option value="sdt">sdt</option>
+          <option value="sdm">sdm</option>
+          <option value="porsi">porsi</option>
         </select>
       </div>
       <button type="button" class="remove-row-btn" onclick="this.closest('.ingredient-row').remove()">Hapus</button>
@@ -1625,6 +1860,7 @@ function renderIngredientRows(rows){
   }
 }
 
+document.getElementById('btn-import-menu').addEventListener('click', ()=> importSeedRecipes(false));
 document.getElementById('btn-add-ingredient-row').addEventListener('click', ()=>{
   document.getElementById('recipe-ingredient-rows').insertAdjacentHTML('beforeend', ingredientRowTemplate());
 });
@@ -1932,6 +2168,13 @@ function renderDashboard(){
   if(note) note.textContent = 'Menyiapkan penyimpanan…';
   await detectStorageMode();
   await loadAll();
+  try{
+    const seededRes = await storageGet(SEED_FLAG_KEY);
+    if(!(seededRes && seededRes.value)){
+      await importSeedRecipes(true);
+      await storageSet(SEED_FLAG_KEY, '1');
+    }
+  }catch(e){}
   refreshItemSuggestions();
   updateTotalPreview();
   renderIngredientRows();
